@@ -6,6 +6,41 @@ It provides **automated unit tests**, a **custom Django CLI management command**
 
 ---
 
+## 📂 Project Structure
+
+```text
+accuknox_assignment/
+│
+├── manage.py                   # Django CLI wrapper
+├── README.md                   # Setup instructions and documentation
+├── requirements.txt            # Project dependencies list
+├── db.sqlite3                  # SQLite Database (generated after migration)
+│
+├── rectangle.py                # Iterable custom Rectangle class
+│
+├── accuknox_assignment/        # Project settings folder
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   ├── wsgi.py
+│   └── asgi.py
+│
+└── signals_app/                # Signal demonstrations application
+    ├── __init__.py
+    ├── apps.py                 # Registers signals via ready()
+    ├── models.py               # Models for verification (TestModel, Order, Log)
+    ├── signals.py              # Signal receivers
+    ├── views.py                # Dashboard & API JSON endpoints
+    ├── urls.py                 # Routing for application endpoints
+    ├── tests.py                # Unit test suite verifying all behaviors
+    ├── static/
+    │   └── signals_app/
+    │       └── style.css       # Premium CSS design stylesheet
+    └── templates/
+        └── signals_app/
+            └── index.html      # Premium HTML interactive dashboard
+```
+---
 ## 🛠️ Project Setup & Installation
 
 Follow these instructions to run and verify the codebase locally:
@@ -257,37 +292,3 @@ Destroying test database for alias 'default'...
 
 ---
 
-## 📂 Project Structure
-
-```text
-accuknox_assignment/
-│
-├── manage.py                   # Django CLI wrapper
-├── README.md                   # Setup instructions and documentation
-├── requirements.txt            # Project dependencies list
-├── db.sqlite3                  # SQLite Database (generated after migration)
-│
-├── rectangle.py                # Iterable custom Rectangle class
-│
-├── accuknox_assignment/        # Project settings folder
-│   ├── __init__.py
-│   ├── settings.py
-│   ├── urls.py
-│   ├── wsgi.py
-│   └── asgi.py
-│
-└── signals_app/                # Signal demonstrations application
-    ├── __init__.py
-    ├── apps.py                 # Registers signals via ready()
-    ├── models.py               # Models for verification (TestModel, Order, Log)
-    ├── signals.py              # Signal receivers
-    ├── views.py                # Dashboard & API JSON endpoints
-    ├── urls.py                 # Routing for application endpoints
-    ├── tests.py                # Unit test suite verifying all behaviors
-    ├── static/
-    │   └── signals_app/
-    │       └── style.css       # Premium CSS design stylesheet
-    └── templates/
-        └── signals_app/
-            └── index.html      # Premium HTML interactive dashboard
-```
