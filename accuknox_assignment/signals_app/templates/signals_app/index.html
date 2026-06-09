@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccuKnox Trainee Assignment - Django Signals Proofs</title>
+    <link rel="stylesheet" href="{% static 'signals_app/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <span class="badge">Technical Assessment</span>
+            <h1>Django Signals & Custom Classes</h1>
+            <p>Interactive proofs demonstrating signal execution characteristics (synchronicity, threading, and transactions) and iterable classes.</p>
+        </header>
+
+        <main class="dashboard-grid">
+            
+            <!-- QUESTION 1: SYNCHRONICITY -->
+            <div class="card" id="card-q1">
+                <div class="card-header">
+                    <h2 class="card-title">1. Synchronicity Proof</h2>
+                    <span class="card-num">Q1</span>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">
+                        By default, Django signals are executed <strong>synchronously</strong>. 
+                        When a signal is sent, Django waits for all connected receivers to finish executing before continuing the caller thread.
+                    </p>
+                    
+                    <span class="code-title">Proof Logic (views.py / signals.py)</span>
+                    <div class="code-container">
+<pre><code># signals.py
+@receiver(post_save, sender=TestModel)
+def signal_handler(sender, instance, **kwargs):
+    if instance.name == 'sleep_test':
+        time.sleep(5)  # Simulate delay
+
+# views.py (Test execution)
+start = time.time()
+TestModel.objects.create(name="sleep_test")
+end = time.time()
+self.assertGreaterEqual(end - start, 5.0)</code></pre>
+                    </div>
+
+                    <button class="btn" onclick="runProof('q1', this)">
+                        <span class="spinner" id="spinner-q1"></span>
+                        <span class="btn-text">Execute Q1 Proof (5s Delay)</span>
+                    </button>
+
+                    <!-- Result output -->
+                    <div class="result-panel" id="result-q1">
+                        <div class="result-header">
+                            <span class="result-label">Status</span>
+                            <span class="result-badge success">Completed</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Start Timestamp:</span>
+                            <span class="result-value" id="val-q1-start">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">End Timestamp:</span>
+                            <span class="result-value" id="val-q1-end">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Save Duration:</span>
+                            <span class="result-value" id="val-q1-duration">-</span>
+                        </div>
+                        <div class="result-conclusion">
+                            <span class="conclusion-title">Conclusion</span>
+                            <p id="val-q1-conclusion">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUESTION 2: THREADING -->
+            <div class="card" id="card-q2">
+                <div class="card-header">
+                    <h2 class="card-title">2. Threading Proof</h2>
+                    <span class="card-num">Q2</span>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">
+                        Django signals run in the <strong>same thread</strong> as the caller by default. 
+                        No new threads are spawned when dispatching signals unless explicitly initiated by the developer.
+                    </p>
+                    
+                    <span class="code-title">Proof Logic (signals.py / views.py)</span>
+                    <div class="code-container">
+<pre><code># Inside views.py (Caller)
+caller_tid = threading.current_thread().ident
+
+# Inside signals.py (Receiver)
+signal_tid = threading.current_thread().ident
+
+# Verification
+self.assertEqual(caller_tid, signal_tid)</code></pre>
+                    </div>
+
+                    <button class="btn" onclick="runProof('q2', this)">
+                        <span class="spinner" id="spinner-q2"></span>
+                        <span class="btn-text">Execute Q2 Proof</span>
+                    </button>
+
+                    <!-- Result output -->
+                    <div class="result-panel" id="result-q2">
+                        <div class="result-header">
+                            <span class="result-label">Status</span>
+                            <span class="result-badge success">Completed</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Caller Thread:</span>
+                            <span class="result-value" id="val-q2-caller">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Signal Thread:</span>
+                            <span class="result-value" id="val-q2-signal">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Threads Match:</span>
+                            <span class="result-value" id="val-q2-match">-</span>
+                        </div>
+                        <div class="result-conclusion">
+                            <span class="conclusion-title">Conclusion</span>
+                            <p id="val-q2-conclusion">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUESTION 3: TRANSACTIONS -->
+            <div class="card" id="card-q3">
+                <div class="card-header">
+                    <h2 class="card-title">3. Transaction Scope Proof</h2>
+                    <span class="card-num">Q3</span>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">
+                        Django signals execute in the <strong>same database transaction</strong> as the caller. 
+                        If the outer transaction is rolled back, all DB operations performed inside the signal receiver are also rolled back.
+                    </p>
+                    
+                    <span class="code-title">Proof Logic (atomic scope verification)</span>
+                    <div class="code-container">
+<pre><code># views.py
+with transaction.atomic():
+    Order.objects.create(name="Laptop")
+    # order_save signal creates Log record...
+    raise Exception("Forced Rollback")
+
+# Post-exception verification:
+self.assertEqual(Order.objects.count(), 0)
+self.assertEqual(Log.objects.count(), 0)</code></pre>
+                    </div>
+
+                    <button class="btn" onclick="runProof('q3', this)">
+                        <span class="spinner" id="spinner-q3"></span>
+                        <span class="btn-text">Execute Q3 Proof</span>
+                    </button>
+
+                    <!-- Result output -->
+                    <div class="result-panel" id="result-q3">
+                        <div class="result-header">
+                            <span class="result-label">Status</span>
+                            <span class="result-badge success">Completed</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Initial DB Counts:</span>
+                            <span class="result-value" id="val-q3-initial">-</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Atomic Scope Action:</span>
+                            <span class="result-value">Exception Triggered</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Final DB Counts:</span>
+                            <span class="result-value" id="val-q3-final">-</span>
+                        </div>
+                        <div class="result-conclusion">
+                            <span class="conclusion-title">Conclusion</span>
+                            <p id="val-q3-conclusion">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RECTANGLE CUSTOM CLASS -->
+            <div class="card" id="card-rect">
+                <div class="card-header">
+                    <h2 class="card-title">4. Python Custom Class</h2>
+                    <span class="card-num">Class</span>
+                </div>
+                <div class="card-body">
+                    <p class="card-description">
+                        An iterable Python class that takes <code>length</code> and <code>width</code>, and yields length followed by width in a dictionary format.
+                    </p>
+                    
+                    <span class="code-title">Implementation (rectangle.py)</span>
+                    <div class="code-container">
+<pre><code>class Rectangle:
+    def __init__(self, length: int, width: int):
+        self.length = length
+        self.width = width
+
+    def __iter__(self):
+        yield {"length": self.length}
+        yield {"width": self.width}</code></pre>
+                    </div>
+
+                    <div style="margin-top: 15px; padding: 15px; background: rgba(15, 23, 42, 0.5); border-radius: 12px; border: 1px dashed rgba(255, 255, 255, 0.1);">
+                        <span class="code-title" style="margin-bottom: 5px;">Django Template Live Iteration:</span>
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--accent-cyan);">
+                            <div style="color: var(--text-secondary); margin-bottom: 4px;"># Code run: rect = Rectangle(10, 5)</div>
+                            {% for item in rectangle_iterations %}
+                                <div>Iterated: {{ item }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <footer>
+            <p>Django Signals & Custom Classes Assessment</p>
+        </footer>
+    </div>
+
+    <script>
+        async function runProof(questionId, button) {
+            const spinner = document.getElementById(`spinner-${questionId}`);
+            const resultPanel = document.getElementById(`result-${questionId}`);
+            
+            // Disable button & show spinner
+            button.disabled = true;
+            spinner.style.display = 'inline-block';
+            resultPanel.style.display = 'none';
+
+            try {
+                const response = await fetch(`/run-proof-${questionId}/`);
+                if (!response.ok) {
+                    throw new Error(`Server returned status ${response.status}`);
+                }
+                const data = await response.json();
+
+                // Render Q1
+                if (questionId === 'q1') {
+                    document.getElementById('val-q1-start').innerText = new Date(data.start_time * 1000).toLocaleTimeString() + '.' + String(data.start_time % 1).substring(2, 5);
+                    document.getElementById('val-q1-end').innerText = new Date(data.end_time * 1000).toLocaleTimeString() + '.' + String(data.end_time % 1).substring(2, 5);
+                    document.getElementById('val-q1-duration').innerText = `${data.duration} seconds`;
+                    document.getElementById('val-q1-conclusion').innerText = data.conclusion;
+                }
+                
+                // Render Q2
+                if (questionId === 'q2') {
+                    document.getElementById('val-q2-caller').innerText = `${data.caller_thread_name} (ID: ${data.caller_thread_id})`;
+                    document.getElementById('val-q2-signal').innerText = `${data.signal_thread_name} (ID: ${data.signal_thread_id})`;
+                    document.getElementById('val-q2-match').innerText = data.same_thread ? 'TRUE (Identical IDs)' : 'FALSE';
+                    document.getElementById('val-q2-conclusion').innerText = data.conclusion;
+                }
+
+                // Render Q3
+                if (questionId === 'q3') {
+                    document.getElementById('val-q3-initial').innerText = `Orders: ${data.initial_counts.orders}, Logs: ${data.initial_counts.logs}`;
+                    document.getElementById('val-q3-final').innerText = `Orders: ${data.final_counts.orders}, Logs: ${data.final_counts.logs}`;
+                    document.getElementById('val-q3-conclusion').innerText = data.conclusion;
+                }
+
+                // Display result panel
+                resultPanel.style.display = 'block';
+            } catch (err) {
+                console.error(err);
+                alert(`Error running proof: ${err.message}`);
+            } finally {
+                // Re-enable button & hide spinner
+                button.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
