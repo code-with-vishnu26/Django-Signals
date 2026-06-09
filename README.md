@@ -287,9 +287,13 @@ System check identified no issues (0 silenced).
 Ran 4 tests in 5.028s
 
 OK
+Destroying test database for alias 'default'...
 
-------
-## Conclusion
+```
+
+---
+
+## ✅ Conclusion
 
 This project demonstrates and provides verifiable proof of the default behavior of Django Signals with respect to:
 
@@ -302,8 +306,7 @@ Additionally, it includes a custom iterable Python class (`Rectangle`) that sati
 All conclusions are supported by executable code, automated tests, and interactive demonstrations implemented within a complete Django project structure.
 
 ---
-Destroying test database for alias 'default'...
-```
+
 
 ---
 
